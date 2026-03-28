@@ -25,8 +25,9 @@ export default function HexViewer({ bytes, highlight }: Props) {
       return { viewStart: 0, viewEnd: Math.min(bytes.length, WINDOW_BYTES) };
     }
 
-    const center = Math.floor((highlight.start + highlight.end) / 2);
-    let start = Math.max(center - Math.floor(WINDOW_BYTES / 2), 0);
+    const highlightStartRow = Math.floor(highlight.start / BYTES_PER_ROW);
+    const preferredStartRow = Math.max(highlightStartRow - 2, 0);
+    let start = preferredStartRow * BYTES_PER_ROW;
     let end = Math.min(start + WINDOW_BYTES, bytes.length);
 
     if (end - start < WINDOW_BYTES) {
