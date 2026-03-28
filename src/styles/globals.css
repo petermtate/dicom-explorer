@@ -100,7 +100,7 @@ ul {
 
 .right-column {
   display: grid;
-  grid-template-rows: 1fr 1fr;
+  grid-template-rows: auto 1fr;
   gap: 1rem;
   min-height: 0;
 }
@@ -183,6 +183,10 @@ ul {
 
 .details-values {
   grid-column: 1 / -1;
+}
+
+.hex-panel {
+  width: 100%;
 }
 
 .hex-container {

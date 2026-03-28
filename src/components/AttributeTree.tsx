@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import { formatDicomTag } from "@/lib/formatDicomTag";
 import type { DicomAttributeNode } from "@/types/dicom";
 
 type Props = {
@@ -35,7 +36,7 @@ function TreeRow({ node, level, expanded, selectedNodeId, onSelectNode, onToggle
           {hasChildren ? (isExpanded ? "-" : "+") : ""}
         </button>
         <button type="button" className="node-label" onClick={() => onSelectNode(node.id)}>
-          <span className="tag">{node.tag.toUpperCase()}</span>
+          <span className="tag">{formatDicomTag(node.tag)}</span>
           <span>{node.tagLabel}</span>
         </button>
       </div>

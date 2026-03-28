@@ -29,5 +29,6 @@ describe("AttributeDetailsPanel", () => {
     expect(screen.getByText("Patient Name")).toBeInTheDocument();
     expect(screen.getByText("DOE^JOHN")).toBeInTheDocument();
     expect(screen.getByText("1")).toBeInTheDocument();
+    expect(screen.getByText("(0010,0010)")).toBeInTheDocument();
   });
 });

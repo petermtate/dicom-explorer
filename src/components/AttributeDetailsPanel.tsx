@@ -1,4 +1,6 @@
 import React from "react";
+
+import { formatDicomTag } from "@/lib/formatDicomTag";
 import type { DicomAttributeNode } from "@/types/dicom";
 
 type Props = {
@@ -14,7 +16,7 @@ export default function AttributeDetailsPanel({ node }: Props) {
     <div className="details-grid">
       <div>
         <h3>Tag</h3>
-        <p>{node.tag.toUpperCase()}</p>
+        <p>{formatDicomTag(node.tag)}</p>
       </div>
       <div>
         <h3>Name</h3>
