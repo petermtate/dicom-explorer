@@ -9,6 +9,8 @@ export type DicomAttributeNode = {
   tag: string;
   tagLabel: string;
   vr?: string;
+  vrSource: "parsed" | "dictionary" | "unknown";
+  valueInterpretation?: string;
   vm: number;
   values: string[];
   valueRanges: ValueRange[];

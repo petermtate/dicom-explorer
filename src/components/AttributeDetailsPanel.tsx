@@ -24,12 +24,21 @@ export default function AttributeDetailsPanel({ node }: Props) {
       </div>
       <div>
         <h3>VR</h3>
-        <p>{node.vr ?? "Unknown"}</p>
+        <p>
+          {node.vr ?? "Unknown"}
+          {node.vrSource === "dictionary" ? " (inferred from dictionary)" : ""}
+        </p>
       </div>
       <div>
         <h3>Values (VM)</h3>
         <p>{node.vm}</p>
       </div>
+      {node.valueInterpretation && (
+        <div>
+          <h3>Value Interpretation</h3>
+          <p>{node.valueInterpretation}</p>
+        </div>
+      )}
       <div className="details-values">
         <h3>Value Preview</h3>
         {node.values.length > 0 ? (

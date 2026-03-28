@@ -57,11 +57,13 @@ export default function HomePage() {
       <section className="workspace">
         <aside className="panel tree-panel">
           <h2>Attributes</h2>
-          <AttributeTree
-            nodes={document?.rootNodes ?? []}
-            selectedNodeId={selectedNodeId}
-            onSelectNode={setSelectedNodeId}
-          />
+          <div className="panel-body">
+            <AttributeTree
+              nodes={document?.rootNodes ?? []}
+              selectedNodeId={selectedNodeId}
+              onSelectNode={setSelectedNodeId}
+            />
+          </div>
         </aside>
 
         <div className="right-column">

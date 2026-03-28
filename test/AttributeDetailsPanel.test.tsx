@@ -18,6 +18,8 @@ describe("AttributeDetailsPanel", () => {
           tag: "x00100010",
           tagLabel: "Patient Name",
           vr: "PN",
+          vrSource: "parsed",
+          valueInterpretation: undefined,
           vm: 1,
           values: ["DOE^JOHN"],
           valueRanges: [{ start: 200, end: 207, kind: "value" }],
@@ -30,5 +32,48 @@ describe("AttributeDetailsPanel", () => {
     expect(screen.getByText("DOE^JOHN")).toBeInTheDocument();
     expect(screen.getByText("1")).toBeInTheDocument();
     expect(screen.getByText("(0010,0010)")).toBeInTheDocument();
+  });
+
+  it("labels dictionary-derived VR values as inferred", () => {
+    render(
+      <AttributeDetailsPanel
+        node={{
+          id: "x7fe00010.0",
+          tag: "x7fe00010",
+          tagLabel: "Pixel Data",
+          vr: "OB or OW",
+          vrSource: "dictionary",
+          valueInterpretation: undefined,
+          vm: 1,
+          values: ["<binary omitted>"],
+          valueRanges: [{ start: 512, end: 1023, kind: "value" }],
+          children: []
+        }}
+      />
+    );
+
+    expect(screen.getByText("OB or OW (inferred from dictionary)")).toBeInTheDocument();
+  });
+
+  it("renders value interpretation when present", () => {
+    render(
+      <AttributeDetailsPanel
+        node={{
+          id: "x00080016.0",
+          tag: "x00080016",
+          tagLabel: "SOP Class UID",
+          vr: "UI",
+          vrSource: "parsed",
+          valueInterpretation: "Ultrasound Multi-frame Image Storage",
+          vm: 1,
+          values: ["1.2.840.10008.5.1.4.1.1.3.1"],
+          valueRanges: [{ start: 128, end: 155, kind: "value" }],
+          children: []
+        }}
+      />
+    );
+
+    expect(screen.getByText("Value Interpretation")).toBeInTheDocument();
+    expect(screen.getByText("Ultrasound Multi-frame Image Storage")).toBeInTheDocument();
   });
 });
