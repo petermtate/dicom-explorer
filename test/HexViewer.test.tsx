@@ -18,4 +18,22 @@ describe("HexViewer", () => {
     expect(highlighted).toHaveLength(3);
     expect(screen.getByText("02")).toBeInTheDocument();
   });
+
+  it("starts the window two rows before the highlighted byte when possible", () => {
+    const bytes = new Uint8Array(5000).map((_, index) => index % 256);
+
+    render(<HexViewer bytes={bytes} highlight={{ start: 320, end: 324 }} />);
+
+    expect(screen.getByText(/Showing bytes 288 to 4383 of 5000/i)).toBeInTheDocument();
+    expect(screen.getByText("00000120")).toBeInTheDocument();
+  });
+
+  it("falls back to the beginning when highlight is near the top", () => {
+    const bytes = new Uint8Array(5000).map((_, index) => index % 256);
+
+    render(<HexViewer bytes={bytes} highlight={{ start: 20, end: 24 }} />);
+
+    expect(screen.getByText(/Showing bytes 0 to 4095 of 5000/i)).toBeInTheDocument();
+  });
+
 });
