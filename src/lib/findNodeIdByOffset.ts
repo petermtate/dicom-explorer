@@ -7,7 +7,8 @@ export function findNodeIdByOffset(document: ParsedDicomDocument, offset: number
   const kindScores: Record<string, number> = {
     value: 0,
     tag: 1,
-    length: 2
+    vr: 2,
+    length: 3
   };
 
   for (const node of document.indexById.values()) {

@@ -54,10 +54,14 @@ describe("findNodeIdByOffset", () => {
     expect(findNodeIdByOffset(document, 13)).toBe("child");
   });
 
-  it("prefers a value match over tag/length matches for equal spans", () => {
+  it("prefers a value match over tag/vr/length matches for equal spans", () => {
     const tagNode = createNode({
       id: "tag",
       valueRanges: [{ start: 40, end: 47, kind: "tag" }]
+    });
+    const vrNode = createNode({
+      id: "vr",
+      valueRanges: [{ start: 40, end: 47, kind: "vr" }]
     });
     const lengthNode = createNode({
       id: "length",
@@ -68,7 +72,7 @@ describe("findNodeIdByOffset", () => {
       valueRanges: [{ start: 40, end: 47, kind: "value" }]
     });
 
-    const document = createDocument([tagNode, lengthNode, valueNode]);
+    const document = createDocument([tagNode, vrNode, lengthNode, valueNode]);
 
     expect(findNodeIdByOffset(document, 42)).toBe("value");
   });

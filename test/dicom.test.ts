@@ -97,6 +97,7 @@ describe("parseDicomFile", () => {
     });
     expect(parsed.rootNodes[0].valueRanges).toEqual([
       { start: 248, end: 251, kind: "tag" },
+      { start: 252, end: 253, kind: "vr" },
       { start: 254, end: 255, kind: "length" },
       { start: 256, end: 280, kind: "value" }
     ]);

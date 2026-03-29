@@ -108,6 +108,7 @@ function getValueRanges(element: Element, vr: string | undefined, isImplicitTran
   const ranges: ValueRange[] = [];
   const headerLength = getElementHeaderLength(element, vr, isImplicitTransferSyntax);
   const headerStart = element.dataOffset - headerLength;
+  const hasExplicitVr = !isImplicitTransferSyntax || isFileMetaTag(element.tag);
 
   if (headerStart >= 0) {
     const tagEnd = headerStart + 3;
@@ -117,6 +118,18 @@ function getValueRanges(element: Element, vr: string | undefined, isImplicitTran
         end: tagEnd,
         kind: "tag"
       });
+    }
+
+    if (hasExplicitVr) {
+      const vrStart = headerStart + 4;
+      const vrEnd = vrStart + 1;
+      if (vrEnd < element.dataOffset) {
+        ranges.push({
+          start: vrStart,
+          end: vrEnd,
+          kind: "vr"
+        });
+      }
     }
 
     const lengthFieldBytes = headerLength === 8 ? 2 : 4;

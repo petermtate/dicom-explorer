@@ -261,6 +261,11 @@ ul {
   color: #0f2732;
 }
 
+.hex-byte.is-highlighted-vr {
+  background: #86efac;
+  color: #102616;
+}
+
 .hex-byte.is-highlighted-length {
   background: #d8b4fe;
   color: #2f1946;

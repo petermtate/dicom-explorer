@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { useMemo, useState } from "react";
 
 import AttributeDetailsPanel from "@/components/AttributeDetailsPanel";
@@ -43,7 +44,7 @@ export default function HomePage() {
     }
   };
 
-  const highlightedRanges = selectedNode?.valueRanges.filter((range) => range.kind !== "value") ?? [];
+  const highlightedRanges = selectedNode?.valueRanges ?? [];
 
   const onHexByteClick = (offset: number) => {
     if (!document) {

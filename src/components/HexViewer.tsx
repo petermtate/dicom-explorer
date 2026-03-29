@@ -71,6 +71,8 @@ export default function HexViewer({ bytes, highlights, onByteClick }: Props) {
                   const highlightClass = matchingHighlight
                     ? matchingHighlight.kind === "tag"
                       ? "is-highlighted-tag"
+                      : matchingHighlight.kind === "vr"
+                        ? "is-highlighted-vr"
                       : matchingHighlight.kind === "length"
                         ? "is-highlighted-length"
                         : "is-highlighted"

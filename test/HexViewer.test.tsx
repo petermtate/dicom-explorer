@@ -14,21 +14,24 @@ describe("HexViewer", () => {
     expect(screen.getByText(/no bytes/i)).toBeInTheDocument();
   });
 
-  it("highlights tag and length ranges with distinct classes", () => {
+  it("highlights tag, vr, and length ranges with distinct classes", () => {
     const bytes = new Uint8Array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
     const { container } = render(
       <HexViewer
         bytes={bytes}
         highlights={[
           { start: 2, end: 4, kind: "tag" },
+          { start: 5, end: 6, kind: "vr" },
           { start: 7, end: 8, kind: "length" }
         ]}
       />
     );
 
     const highlightedTag = container.querySelectorAll(".hex-byte.is-highlighted-tag");
+    const highlightedVr = container.querySelectorAll(".hex-byte.is-highlighted-vr");
     const highlightedLength = container.querySelectorAll(".hex-byte.is-highlighted-length");
     expect(highlightedTag).toHaveLength(3);
+    expect(highlightedVr).toHaveLength(2);
     expect(highlightedLength).toHaveLength(2);
     expect(screen.getByText("02")).toBeInTheDocument();
   });

@@ -1,7 +1,7 @@
 export type ValueRange = {
   start: number;
   end: number;
-  kind: "tag" | "length" | "value";
+  kind: "tag" | "vr" | "length" | "value";
 };
 
 export type DicomAttributeNode = {
