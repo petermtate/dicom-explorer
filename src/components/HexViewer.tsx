@@ -3,9 +3,11 @@
 import React from "react";
 import { useMemo } from "react";
 
+import type { ValueRange } from "@/types/dicom";
+
 type Props = {
   bytes: Uint8Array | null;
-  highlight: { start: number; end: number } | null;
+  highlightRanges: ValueRange[];
 };
 
 const BYTES_PER_ROW = 16;
@@ -15,17 +17,19 @@ function toHex(value: number, width = 2): string {
   return value.toString(16).toUpperCase().padStart(width, "0");
 }
 
-export default function HexViewer({ bytes, highlight }: Props) {
+export default function HexViewer({ bytes, highlightRanges }: Props) {
+  const firstHighlight = highlightRanges[0] ?? null;
+
   const { viewStart, viewEnd } = useMemo(() => {
     if (!bytes || bytes.length === 0) {
       return { viewStart: 0, viewEnd: 0 };
     }
 
-    if (!highlight) {
+    if (!firstHighlight) {
       return { viewStart: 0, viewEnd: Math.min(bytes.length, WINDOW_BYTES) };
     }
 
-    const highlightStartRow = Math.floor(highlight.start / BYTES_PER_ROW);
+    const highlightStartRow = Math.floor(firstHighlight.start / BYTES_PER_ROW);
     const preferredStartRow = Math.max(highlightStartRow - 2, 0);
     let start = preferredStartRow * BYTES_PER_ROW;
     let end = Math.min(start + WINDOW_BYTES, bytes.length);
@@ -35,7 +39,7 @@ export default function HexViewer({ bytes, highlight }: Props) {
     }
 
     return { viewStart: start, viewEnd: end };
-  }, [bytes, highlight]);
+  }, [bytes, firstHighlight]);
 
   if (!bytes || bytes.length === 0) {
     return <p className="placeholder">No bytes to display.</p>;
@@ -61,11 +65,13 @@ export default function HexViewer({ bytes, highlight }: Props) {
               <div className="hex-values">
                 {row.map((value, index) => {
                   const absolute = rowOffset + index;
-                  const isHighlighted =
-                    highlight && absolute >= highlight.start && absolute <= highlight.end;
+                  const matchingRange = highlightRanges.find(
+                    (range) => absolute >= range.start && absolute <= range.end
+                  );
+                  const highlightClass = matchingRange ? `is-${matchingRange.kind}-highlighted` : "";
 
                   return (
-                    <span className={`hex-byte ${isHighlighted ? "is-highlighted" : ""}`} key={`byte-${absolute}`}>
+                    <span className={`hex-byte ${highlightClass}`.trim()} key={`byte-${absolute}`}>
                       {toHex(value)}
                     </span>
                   );

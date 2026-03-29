@@ -42,7 +42,7 @@ export default function HomePage() {
     }
   };
 
-  const highlightedRange = selectedNode?.valueRanges[0] ?? null;
+  const highlightRanges = selectedNode?.valueRanges ?? [];
 
   return (
     <main className="app-shell">
@@ -74,7 +74,7 @@ export default function HomePage() {
 
           <section className="panel hex-panel">
             <h2>Hex Viewer</h2>
-            <HexViewer bytes={document?.byteArray ?? null} highlight={highlightedRange} />
+            <HexViewer bytes={document?.byteArray ?? null} highlightRanges={highlightRanges} />
           </section>
         </div>
       </section>

@@ -59,6 +59,11 @@ describe("parseDicomFile", () => {
       vm: 1,
       values: ["DOE^JOHN"]
     });
+    expect(parsed.rootNodes[0].valueRanges).toEqual([
+      { start: 120, end: 123, kind: "tag" },
+      { start: 124, end: 127, kind: "length" },
+      { start: 128, end: 135, kind: "value" }
+    ]);
   });
 
   it("preserves parsed VRs for explicit transfer syntax", async () => {
@@ -95,6 +100,11 @@ describe("parseDicomFile", () => {
       vrSource: "parsed",
       valueInterpretation: "CT Image Storage"
     });
+    expect(parsed.rootNodes[0].valueRanges).toEqual([
+      { start: 248, end: 251, kind: "tag" },
+      { start: 254, end: 255, kind: "length" },
+      { start: 256, end: 280, kind: "value" }
+    ]);
   });
 
   it("marks unknown SOP class UIDs on SOP class tags", async () => {

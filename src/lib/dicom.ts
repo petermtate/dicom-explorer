@@ -5,6 +5,7 @@ import type { DicomAttributeNode, ParsedDicomDocument, ValueRange } from "@/type
 import { getTagInfo } from "@/lib/tagDictionary";
 
 const BINARY_VRS = new Set(["OB", "OD", "OF", "OL", "OV", "OW", "UN"]);
+const LONG_EXPLICIT_LENGTH_VRS = new Set(["OB", "OD", "OF", "OL", "OV", "OW", "SQ", "UC", "UR", "UT", "UN"]);
 const TEXT_PREVIEW_LIMIT = 256;
 const VALUE_LIST_LIMIT = 20;
 const IMPLICIT_VR_LITTLE_ENDIAN_UID = "1.2.840.10008.1.2";
@@ -88,18 +89,45 @@ function getValueInterpretation(
   return undefined;
 }
 
-function getValueRanges(element: Element): ValueRange[] {
-  if (element.length <= 0 || element.dataOffset < 0) {
+function getValueRanges(element: Element, vr: string | undefined, usesImplicitVr: boolean): ValueRange[] {
+  if (element.dataOffset < 0) {
     return [];
   }
 
-  return [
-    {
+  const normalizedVr = vr?.trim().toUpperCase();
+  const usesLongExplicitLength = !usesImplicitVr && normalizedVr ? LONG_EXPLICIT_LENGTH_VRS.has(normalizedVr) : false;
+
+  const headerLength = usesImplicitVr ? 8 : usesLongExplicitLength ? 12 : 8;
+  const lengthFieldStart = element.dataOffset - (usesImplicitVr ? 4 : usesLongExplicitLength ? 4 : 2);
+  const lengthFieldSize = usesImplicitVr || usesLongExplicitLength ? 4 : 2;
+  const tagStart = element.dataOffset - headerLength;
+  const ranges: ValueRange[] = [];
+
+  if (tagStart >= 0) {
+    ranges.push({
+      start: tagStart,
+      end: tagStart + 3,
+      kind: "tag"
+    });
+  }
+
+  if (lengthFieldStart >= 0) {
+    ranges.push({
+      start: lengthFieldStart,
+      end: lengthFieldStart + lengthFieldSize - 1,
+      kind: "length"
+    });
+  }
+
+  if (element.length > 0) {
+    ranges.push({
       start: element.dataOffset,
       end: element.dataOffset + Math.max(element.length - 1, 0),
       kind: "value"
-    }
-  ];
+    });
+  }
+
+  return ranges;
 }
 
 function buildNodeTree(
@@ -121,6 +149,7 @@ function buildNodeTree(
             ? "dictionary"
             : "unknown";
       const vr = vrSource === "dictionary" ? tagInfo.vr : parsedVr;
+      const usesImplicitVr = isImplicitTransferSyntax && !isFileMetaTag(tag);
       const rawValues = getRawElementValues(dataSet, element);
       const { vm, values } = formatElementValues(dataSet, element, vr);
       const valueInterpretation = getValueInterpretation(tagInfo.tagLabel, vr, rawValues);
@@ -145,7 +174,7 @@ function buildNodeTree(
         valueInterpretation,
         vm,
         values,
-        valueRanges: getValueRanges(element),
+        valueRanges: getValueRanges(element, vr, usesImplicitVr),
         children
       };
 

@@ -246,7 +246,17 @@ ul {
   border-radius: 3px;
 }
 
-.hex-byte.is-highlighted {
+.hex-byte.is-tag-highlighted {
+  background: #59c7ff;
+  color: #0a2130;
+}
+
+.hex-byte.is-length-highlighted {
+  background: #8be28b;
+  color: #102210;
+}
+
+.hex-byte.is-value-highlighted {
   background: #f2a341;
   color: #1f1911;
 }
