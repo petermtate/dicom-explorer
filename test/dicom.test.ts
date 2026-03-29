@@ -96,7 +96,8 @@ describe("parseDicomFile", () => {
       valueInterpretation: "CT Image Storage"
     });
     expect(parsed.rootNodes[0].valueRanges).toEqual([
-      { start: 248, end: 255, kind: "header" },
+      { start: 248, end: 251, kind: "tag" },
+      { start: 254, end: 255, kind: "length" },
       { start: 256, end: 280, kind: "value" }
     ]);
   });

@@ -256,6 +256,16 @@ ul {
   color: #1f1911;
 }
 
+.hex-byte.is-highlighted-tag {
+  background: #8cd9ff;
+  color: #0f2732;
+}
+
+.hex-byte.is-highlighted-length {
+  background: #d8b4fe;
+  color: #2f1946;
+}
+
 @media (max-width: 900px) {
   .app-shell {
     height: auto;

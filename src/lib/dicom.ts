@@ -110,11 +110,24 @@ function getValueRanges(element: Element, vr: string | undefined, isImplicitTran
   const headerStart = element.dataOffset - headerLength;
 
   if (headerStart >= 0) {
-    ranges.push({
-      start: headerStart,
-      end: element.dataOffset - 1,
-      kind: "header"
-    });
+    const tagEnd = headerStart + 3;
+    if (tagEnd < element.dataOffset) {
+      ranges.push({
+        start: headerStart,
+        end: tagEnd,
+        kind: "tag"
+      });
+    }
+
+    const lengthFieldBytes = headerLength === 8 ? 2 : 4;
+    const lengthStart = element.dataOffset - lengthFieldBytes;
+    if (lengthStart >= 0) {
+      ranges.push({
+        start: lengthStart,
+        end: element.dataOffset - 1,
+        kind: "length"
+      });
+    }
   }
 
   if (element.length > 0) {

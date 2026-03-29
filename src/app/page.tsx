@@ -43,7 +43,7 @@ export default function HomePage() {
     }
   };
 
-  const highlightedRange = selectedNode?.valueRanges[0] ?? null;
+  const highlightedRanges = selectedNode?.valueRanges.filter((range) => range.kind !== "value") ?? [];
 
   const onHexByteClick = (offset: number) => {
     if (!document) {
@@ -88,7 +88,7 @@ export default function HomePage() {
             <h2>Hex Viewer</h2>
             <HexViewer
               bytes={document?.byteArray ?? null}
-              highlight={highlightedRange}
+              highlights={highlightedRanges}
               onByteClick={onHexByteClick}
             />
           </section>

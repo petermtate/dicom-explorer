@@ -3,9 +3,11 @@
 import React from "react";
 import { useMemo } from "react";
 
+import type { ValueRange } from "@/types/dicom";
+
 type Props = {
   bytes: Uint8Array | null;
-  highlight: { start: number; end: number } | null;
+  highlights: ValueRange[];
   onByteClick?: (offset: number) => void;
 };
 
@@ -16,17 +18,18 @@ function toHex(value: number, width = 2): string {
   return value.toString(16).toUpperCase().padStart(width, "0");
 }
 
-export default function HexViewer({ bytes, highlight, onByteClick }: Props) {
+export default function HexViewer({ bytes, highlights, onByteClick }: Props) {
+  const primaryHighlight = highlights[0] ?? null;
   const { viewStart, viewEnd } = useMemo(() => {
     if (!bytes || bytes.length === 0) {
       return { viewStart: 0, viewEnd: 0 };
     }
 
-    if (!highlight) {
+    if (!primaryHighlight) {
       return { viewStart: 0, viewEnd: Math.min(bytes.length, WINDOW_BYTES) };
     }
 
-    const highlightStartRow = Math.floor(highlight.start / BYTES_PER_ROW);
+    const highlightStartRow = Math.floor(primaryHighlight.start / BYTES_PER_ROW);
     const preferredStartRow = Math.max(highlightStartRow - 2, 0);
     let start = preferredStartRow * BYTES_PER_ROW;
     let end = Math.min(start + WINDOW_BYTES, bytes.length);
@@ -36,7 +39,7 @@ export default function HexViewer({ bytes, highlight, onByteClick }: Props) {
     }
 
     return { viewStart: start, viewEnd: end };
-  }, [bytes, highlight]);
+  }, [bytes, primaryHighlight]);
 
   if (!bytes || bytes.length === 0) {
     return <p className="placeholder">No bytes to display.</p>;
@@ -62,13 +65,21 @@ export default function HexViewer({ bytes, highlight, onByteClick }: Props) {
               <div className="hex-values">
                 {row.map((value, index) => {
                   const absolute = rowOffset + index;
-                  const isHighlighted =
-                    highlight && absolute >= highlight.start && absolute <= highlight.end;
+                  const matchingHighlight = highlights.find(
+                    (highlight) => absolute >= highlight.start && absolute <= highlight.end
+                  );
+                  const highlightClass = matchingHighlight
+                    ? matchingHighlight.kind === "tag"
+                      ? "is-highlighted-tag"
+                      : matchingHighlight.kind === "length"
+                        ? "is-highlighted-length"
+                        : "is-highlighted"
+                    : "";
 
                   return (
                     <button
                       type="button"
-                      className={`hex-byte ${isHighlighted ? "is-highlighted" : ""}`}
+                      className={`hex-byte ${highlightClass}`}
                       key={`byte-${absolute}`}
                       onClick={() => onByteClick?.(absolute)}
                       aria-label={`Byte ${absolute}`}
