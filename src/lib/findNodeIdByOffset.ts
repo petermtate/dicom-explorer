@@ -1,0 +1,26 @@
+import type { ParsedDicomDocument } from "@/types/dicom";
+
+export function findNodeIdByOffset(document: ParsedDicomDocument, offset: number): string | null {
+  let bestNodeId: string | null = null;
+  let bestSpan = Number.POSITIVE_INFINITY;
+  let bestKindScore = Number.POSITIVE_INFINITY;
+
+  for (const node of document.indexById.values()) {
+    for (const range of node.valueRanges) {
+      if (offset < range.start || offset > range.end) {
+        continue;
+      }
+
+      const span = range.end - range.start;
+      const kindScore = range.kind === "value" ? 0 : 1;
+
+      if (span < bestSpan || (span === bestSpan && kindScore < bestKindScore)) {
+        bestNodeId = node.id;
+        bestSpan = span;
+        bestKindScore = kindScore;
+      }
+    }
+  }
+
+  return bestNodeId;
+}

@@ -6,6 +6,7 @@ import { useMemo } from "react";
 type Props = {
   bytes: Uint8Array | null;
   highlight: { start: number; end: number } | null;
+  onByteClick?: (offset: number) => void;
 };
 
 const BYTES_PER_ROW = 16;
@@ -15,7 +16,7 @@ function toHex(value: number, width = 2): string {
   return value.toString(16).toUpperCase().padStart(width, "0");
 }
 
-export default function HexViewer({ bytes, highlight }: Props) {
+export default function HexViewer({ bytes, highlight, onByteClick }: Props) {
   const { viewStart, viewEnd } = useMemo(() => {
     if (!bytes || bytes.length === 0) {
       return { viewStart: 0, viewEnd: 0 };
@@ -65,9 +66,15 @@ export default function HexViewer({ bytes, highlight }: Props) {
                     highlight && absolute >= highlight.start && absolute <= highlight.end;
 
                   return (
-                    <span className={`hex-byte ${isHighlighted ? "is-highlighted" : ""}`} key={`byte-${absolute}`}>
+                    <button
+                      type="button"
+                      className={`hex-byte ${isHighlighted ? "is-highlighted" : ""}`}
+                      key={`byte-${absolute}`}
+                      onClick={() => onByteClick?.(absolute)}
+                      aria-label={`Byte ${absolute}`}
+                    >
                       {toHex(value)}
-                    </span>
+                    </button>
                   );
                 })}
               </div>

@@ -88,18 +88,44 @@ function getValueInterpretation(
   return undefined;
 }
 
-function getValueRanges(element: Element): ValueRange[] {
-  if (element.length <= 0 || element.dataOffset < 0) {
+function getElementHeaderLength(element: Element, vr: string | undefined, isImplicitTransferSyntax: boolean): number {
+  if (isImplicitTransferSyntax && !isFileMetaTag(element.tag)) {
+    return 8;
+  }
+
+  if (["OB", "OD", "OF", "OL", "OV", "OW", "SQ", "UN", "UT"].includes(vr ?? "")) {
+    return 12;
+  }
+
+  return 8;
+}
+
+function getValueRanges(element: Element, vr: string | undefined, isImplicitTransferSyntax: boolean): ValueRange[] {
+  if (element.dataOffset < 0) {
     return [];
   }
 
-  return [
-    {
+  const ranges: ValueRange[] = [];
+  const headerLength = getElementHeaderLength(element, vr, isImplicitTransferSyntax);
+  const headerStart = element.dataOffset - headerLength;
+
+  if (headerStart >= 0) {
+    ranges.push({
+      start: headerStart,
+      end: element.dataOffset - 1,
+      kind: "header"
+    });
+  }
+
+  if (element.length > 0) {
+    ranges.push({
       start: element.dataOffset,
       end: element.dataOffset + Math.max(element.length - 1, 0),
       kind: "value"
-    }
-  ];
+    });
+  }
+
+  return ranges;
 }
 
 function buildNodeTree(
@@ -145,7 +171,7 @@ function buildNodeTree(
         valueInterpretation,
         vm,
         values,
-        valueRanges: getValueRanges(element),
+        valueRanges: getValueRanges(element, vr, isImplicitTransferSyntax),
         children
       };
 

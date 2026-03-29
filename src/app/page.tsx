@@ -7,6 +7,7 @@ import AttributeTree from "@/components/AttributeTree";
 import FileDropZone from "@/components/FileDropZone";
 import HexViewer from "@/components/HexViewer";
 import { parseDicomFile } from "@/lib/dicom";
+import { findNodeIdByOffset } from "@/lib/findNodeIdByOffset";
 import type { ParsedDicomDocument } from "@/types/dicom";
 
 type LoadState = "idle" | "loading" | "loaded" | "error";
@@ -44,6 +45,17 @@ export default function HomePage() {
 
   const highlightedRange = selectedNode?.valueRanges[0] ?? null;
 
+  const onHexByteClick = (offset: number) => {
+    if (!document) {
+      return;
+    }
+
+    const matchedNodeId = findNodeIdByOffset(document, offset);
+    if (matchedNodeId) {
+      setSelectedNodeId(matchedNodeId);
+    }
+  };
+
   return (
     <main className="app-shell">
       <header className="app-header">
@@ -74,7 +86,11 @@ export default function HomePage() {
 
           <section className="panel hex-panel">
             <h2>Hex Viewer</h2>
-            <HexViewer bytes={document?.byteArray ?? null} highlight={highlightedRange} />
+            <HexViewer
+              bytes={document?.byteArray ?? null}
+              highlight={highlightedRange}
+              onByteClick={onHexByteClick}
+            />
           </section>
         </div>
       </section>
