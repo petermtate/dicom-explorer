@@ -13,6 +13,12 @@ type Props = {
 
 const BYTES_PER_ROW = 16;
 const WINDOW_BYTES = 4096;
+const HIGHLIGHT_LEGEND = [
+  { kind: "tag", label: "Tag" },
+  { kind: "vr", label: "VR" },
+  { kind: "length", label: "Length" },
+  { kind: "value", label: "Value" }
+] as const;
 
 function toHex(value: number, width = 2): string {
   return value.toString(16).toUpperCase().padStart(width, "0");
@@ -55,6 +61,16 @@ export default function HexViewer({ bytes, highlights, onByteClick }: Props) {
       <p className="hex-caption">
         Showing bytes {viewStart} to {Math.max(viewEnd - 1, 0)} of {bytes.length}
       </p>
+      <div className="hex-legend" aria-label="Hex highlight legend">
+        {HIGHLIGHT_LEGEND.map((item) => (
+          <span className="hex-legend-item" key={item.kind}>
+            <span className={`hex-byte hex-legend-swatch is-highlighted-${item.kind}`} aria-hidden="true">
+              00
+            </span>
+            {item.label}
+          </span>
+        ))}
+      </div>
       <div className="hex-grid">
         {rows.map((rowOffset) => {
           const row = Array.from(bytes.slice(rowOffset, Math.min(rowOffset + BYTES_PER_ROW, viewEnd)));

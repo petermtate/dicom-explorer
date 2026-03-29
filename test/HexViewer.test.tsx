@@ -27,13 +27,22 @@ describe("HexViewer", () => {
       />
     );
 
-    const highlightedTag = container.querySelectorAll(".hex-byte.is-highlighted-tag");
-    const highlightedVr = container.querySelectorAll(".hex-byte.is-highlighted-vr");
-    const highlightedLength = container.querySelectorAll(".hex-byte.is-highlighted-length");
+    const highlightedTag = container.querySelectorAll(".hex-grid .hex-byte.is-highlighted-tag");
+    const highlightedVr = container.querySelectorAll(".hex-grid .hex-byte.is-highlighted-vr");
+    const highlightedLength = container.querySelectorAll(".hex-grid .hex-byte.is-highlighted-length");
     expect(highlightedTag).toHaveLength(3);
     expect(highlightedVr).toHaveLength(2);
     expect(highlightedLength).toHaveLength(2);
     expect(screen.getByText("02")).toBeInTheDocument();
+  });
+
+  it("shows a legend with a dedicated VR swatch", () => {
+    const bytes = new Uint8Array([0, 1, 2, 3]);
+    const { container } = render(<HexViewer bytes={bytes} highlights={[]} />);
+
+    expect(screen.getByLabelText("Hex highlight legend")).toBeInTheDocument();
+    expect(screen.getByText("VR")).toBeInTheDocument();
+    expect(container.querySelector(".hex-legend-swatch.is-highlighted-vr")).toBeInTheDocument();
   });
 
   it("starts the window two rows before the highlighted byte when possible", () => {
