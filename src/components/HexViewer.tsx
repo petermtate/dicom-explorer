@@ -7,18 +7,40 @@ import type { ValueRange } from "@/types/dicom";
 
 type Props = {
   bytes: Uint8Array | null;
-  highlightRanges: ValueRange[];
+  highlightRanges?: ValueRange[];
+  highlightRange?: ValueRange | null;
 };
 
 const BYTES_PER_ROW = 16;
 const WINDOW_BYTES = 4096;
+const KIND_ORDER: Record<ValueRange["kind"], number> = {
+  tag: 0,
+  length: 1,
+  value: 2
+};
 
 function toHex(value: number, width = 2): string {
   return value.toString(16).toUpperCase().padStart(width, "0");
 }
 
-export default function HexViewer({ bytes, highlightRanges }: Props) {
-  const firstHighlight = highlightRanges[0] ?? null;
+export default function HexViewer({ bytes, highlightRanges = [], highlightRange = null }: Props) {
+  const normalizedRanges = useMemo(() => {
+    const mergedRanges = highlightRanges.length > 0 ? highlightRanges : highlightRange ? [highlightRange] : [];
+
+    return [...mergedRanges].sort((left, right) => {
+      if (left.start !== right.start) {
+        return left.start - right.start;
+      }
+
+      if (left.end !== right.end) {
+        return left.end - right.end;
+      }
+
+      return KIND_ORDER[left.kind] - KIND_ORDER[right.kind];
+    });
+  }, [highlightRange, highlightRanges]);
+
+  const firstHighlight = normalizedRanges[0] ?? null;
 
   const { viewStart, viewEnd } = useMemo(() => {
     if (!bytes || bytes.length === 0) {
@@ -65,7 +87,7 @@ export default function HexViewer({ bytes, highlightRanges }: Props) {
               <div className="hex-values">
                 {row.map((value, index) => {
                   const absolute = rowOffset + index;
-                  const matchingRange = highlightRanges.find(
+                  const matchingRange = normalizedRanges.find(
                     (range) => absolute >= range.start && absolute <= range.end
                   );
                   const highlightClass = matchingRange ? `is-${matchingRange.kind}-highlighted` : "";

@@ -46,4 +46,13 @@ describe("HexViewer", () => {
     expect(screen.getByText(/Showing bytes 0 to 4095 of 5000/i)).toBeInTheDocument();
   });
 
+  it("supports a single highlightRange prop for compatibility", () => {
+    const bytes = new Uint8Array([0, 1, 2, 3, 4, 5]);
+    const { container } = render(
+      <HexViewer bytes={bytes} highlightRange={{ start: 1, end: 2, kind: "value" }} />
+    );
+
+    expect(container.querySelectorAll(".hex-byte.is-value-highlighted")).toHaveLength(2);
+  });
+
 });
