@@ -33,4 +33,18 @@ describe("getTagLabel", () => {
   it("returns unknown fallback", () => {
     expect(getTagLabel("x12340001")).toBe("Unknown (1234,0001)");
   });
+
+  it("returns file meta information labels for group 0002 tags", () => {
+    expect(getTagLabel("x00020010")).toBe("Transfer Syntax UID");
+    expect(getTagLabel("x00020012")).toBe("Implementation Class UID");
+  });
+
+  it("returns VR metadata for file meta information tags", () => {
+    expect(getTagInfo("x00020010")).toMatchObject({
+      tagLabel: "Transfer Syntax UID",
+      vr: "UI",
+      parserVr: "UI",
+      isPrivate: false
+    });
+  });
 });
