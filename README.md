@@ -24,3 +24,19 @@ Open `http://localhost:3000`.
 ```bash
 npm test
 ```
+
+## End-to-End Tests
+
+Install Playwright's browser once:
+
+```bash
+npx playwright install chromium
+```
+
+Run the E2E suite:
+
+```bash
+npm run test:e2e
+```
+
+The included Playwright test captures a homepage screenshot into `test-results/`.
