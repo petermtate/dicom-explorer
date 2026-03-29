@@ -242,8 +242,13 @@ ul {
 }
 
 .hex-byte {
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
   padding: 0.05rem 0.12rem;
   border-radius: 3px;
+  cursor: pointer;
 }
 
 .hex-byte.is-highlighted {

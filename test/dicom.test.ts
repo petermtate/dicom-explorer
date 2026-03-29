@@ -95,6 +95,10 @@ describe("parseDicomFile", () => {
       vrSource: "parsed",
       valueInterpretation: "CT Image Storage"
     });
+    expect(parsed.rootNodes[0].valueRanges).toEqual([
+      { start: 248, end: 255, kind: "header" },
+      { start: 256, end: 280, kind: "value" }
+    ]);
   });
 
   it("marks unknown SOP class UIDs on SOP class tags", async () => {
