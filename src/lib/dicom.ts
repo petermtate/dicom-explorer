@@ -1,6 +1,7 @@
 import { explicitElementToString, parseDicom, type DataSet, type Element } from "dicom-parser";
 
 import { getSopClassName } from "@/lib/sopClassDictionary";
+import { getTransferSyntaxName } from "@/lib/transferSyntaxDictionary";
 import type { DicomAttributeNode, ParsedDicomDocument, ValueRange } from "@/types/dicom";
 import { getTagInfo } from "@/lib/tagDictionary";
 
@@ -66,6 +67,10 @@ function tagImpliesSopClass(tagLabel: string): boolean {
   return /SOP Class UID/i.test(tagLabel);
 }
 
+function tagImpliesTransferSyntax(tagLabel: string): boolean {
+  return /Transfer Syntax UID/i.test(tagLabel);
+}
+
 function getValueInterpretation(
   tagLabel: string,
   vr: string | undefined,
@@ -76,6 +81,11 @@ function getValueInterpretation(
   }
 
   const firstValue = rawValues[0];
+  if (tagImpliesTransferSyntax(tagLabel)) {
+    const transferSyntaxName = getTransferSyntaxName(firstValue);
+    return transferSyntaxName ?? "Unknown Transfer Syntax";
+  }
+
   const sopClassName = getSopClassName(firstValue);
   if (sopClassName) {
     return sopClassName;

@@ -136,6 +136,74 @@ describe("parseDicomFile", () => {
     });
   });
 
+
+  it("interprets transfer syntax UIDs", async () => {
+    const dataSet = {
+      elements: {
+        x00020010: {
+          tag: "x00020010",
+          vr: "UI",
+          length: 19,
+          dataOffset: 72
+        }
+      },
+      string: vi.fn((tag: string) => {
+        if (tag === "x00020010") {
+          return "1.2.840.10008.1.2.1";
+        }
+        return undefined;
+      })
+    };
+
+    parseDicom.mockReturnValue(dataSet);
+    explicitElementToString.mockReturnValue("1.2.840.10008.1.2.1");
+
+    const file = {
+      name: "transfer-syntax.dcm",
+      arrayBuffer: vi.fn().mockResolvedValue(new Uint8Array([16, 17, 18]).buffer)
+    } as unknown as File;
+    const parsed = await parseDicomFile(file);
+
+    expect(parsed.rootNodes[0]).toMatchObject({
+      tag: "x00020010",
+      tagLabel: "Transfer Syntax UID",
+      valueInterpretation: "Explicit VR Little Endian"
+    });
+  });
+
+  it("marks unknown transfer syntax UIDs", async () => {
+    const dataSet = {
+      elements: {
+        x00020010: {
+          tag: "x00020010",
+          vr: "UI",
+          length: 5,
+          dataOffset: 72
+        }
+      },
+      string: vi.fn((tag: string) => {
+        if (tag === "x00020010") {
+          return "9.9.9";
+        }
+        return undefined;
+      })
+    };
+
+    parseDicom.mockReturnValue(dataSet);
+    explicitElementToString.mockReturnValue("9.9.9");
+
+    const file = {
+      name: "unknown-transfer-syntax.dcm",
+      arrayBuffer: vi.fn().mockResolvedValue(new Uint8Array([19, 20, 21]).buffer)
+    } as unknown as File;
+    const parsed = await parseDicomFile(file);
+
+    expect(parsed.rootNodes[0]).toMatchObject({
+      tag: "x00020010",
+      valueInterpretation: "Unknown Transfer Syntax"
+    });
+  });
+
   it("does not interpret unrelated unknown UI values", async () => {
     const dataSet = {
       elements: {
