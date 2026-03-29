@@ -54,17 +54,21 @@ describe("findNodeIdByOffset", () => {
     expect(findNodeIdByOffset(document, 13)).toBe("child");
   });
 
-  it("prefers a value match over a header match for equal spans", () => {
-    const headerNode = createNode({
-      id: "header",
-      valueRanges: [{ start: 40, end: 47, kind: "header" }]
+  it("prefers a value match over tag/length matches for equal spans", () => {
+    const tagNode = createNode({
+      id: "tag",
+      valueRanges: [{ start: 40, end: 47, kind: "tag" }]
+    });
+    const lengthNode = createNode({
+      id: "length",
+      valueRanges: [{ start: 40, end: 47, kind: "length" }]
     });
     const valueNode = createNode({
       id: "value",
       valueRanges: [{ start: 40, end: 47, kind: "value" }]
     });
 
-    const document = createDocument([headerNode, valueNode]);
+    const document = createDocument([tagNode, lengthNode, valueNode]);
 
     expect(findNodeIdByOffset(document, 42)).toBe("value");
   });

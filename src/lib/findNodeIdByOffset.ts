@@ -4,6 +4,11 @@ export function findNodeIdByOffset(document: ParsedDicomDocument, offset: number
   let bestNodeId: string | null = null;
   let bestSpan = Number.POSITIVE_INFINITY;
   let bestKindScore = Number.POSITIVE_INFINITY;
+  const kindScores: Record<string, number> = {
+    value: 0,
+    tag: 1,
+    length: 2
+  };
 
   for (const node of document.indexById.values()) {
     for (const range of node.valueRanges) {
@@ -12,7 +17,7 @@ export function findNodeIdByOffset(document: ParsedDicomDocument, offset: number
       }
 
       const span = range.end - range.start;
-      const kindScore = range.kind === "value" ? 0 : 1;
+      const kindScore = kindScores[range.kind] ?? Number.POSITIVE_INFINITY;
 
       if (span < bestSpan || (span === bestSpan && kindScore < bestKindScore)) {
         bestNodeId = node.id;
