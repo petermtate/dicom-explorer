@@ -39,4 +39,8 @@ Run the E2E suite:
 npm run test:e2e
 ```
 
-The included Playwright test captures a homepage screenshot into `test-results/`.
+For DICOM upload coverage, place a de-identified fixture at `test/fixtures/dicom/sample.dcm`.
+
+The included Playwright test:
+- always captures a homepage screenshot into `test-results/`
+- uploads `test/fixtures/dicom/sample.dcm` when present and captures the loaded UI state instead
