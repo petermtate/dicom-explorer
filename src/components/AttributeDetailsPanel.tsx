@@ -7,6 +7,18 @@ type Props = {
   node: DicomAttributeNode | null;
 };
 
+function getValueLengthDisplay(node: DicomAttributeNode): string {
+  if (typeof node.valueLength !== "number" || Number.isNaN(node.valueLength)) {
+    return "Unknown";
+  }
+
+  if (node.vr === "SQ" && node.valueLength === 0xffffffff) {
+    return "Undefined";
+  }
+
+  return String(node.valueLength);
+}
+
 export default function AttributeDetailsPanel({ node }: Props) {
   if (!node) {
     return <p className="placeholder">Select an attribute to inspect details.</p>;
@@ -32,6 +44,10 @@ export default function AttributeDetailsPanel({ node }: Props) {
       <div>
         <h3>Values (VM)</h3>
         <p>{node.vm}</p>
+      </div>
+      <div>
+        <h3>Value Length</h3>
+        <p>{getValueLengthDisplay(node)}</p>
       </div>
       {node.valueInterpretation && (
         <div>

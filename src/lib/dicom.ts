@@ -205,6 +205,7 @@ function buildNodeTree(
         vr,
         vrSource,
         valueInterpretation,
+        valueLength: typeof element.length === "number" ? element.length : undefined,
         vm,
         values,
         valueRanges: getValueRanges(element, vr, isImplicitTransferSyntax),

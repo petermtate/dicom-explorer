@@ -56,6 +56,7 @@ describe("parseDicomFile", () => {
       tagLabel: "Patient's Name",
       vr: "PN",
       vrSource: "dictionary",
+      valueLength: 8,
       vm: 1,
       values: ["DOE^JOHN"]
     });
@@ -93,6 +94,7 @@ describe("parseDicomFile", () => {
       tagLabel: "SOP Class UID",
       vr: "UI",
       vrSource: "parsed",
+      valueLength: 25,
       valueInterpretation: "CT Image Storage"
     });
     expect(parsed.rootNodes[0].valueRanges).toEqual([
@@ -262,8 +264,44 @@ describe("parseDicomFile", () => {
     const parsed = await parseDicomFile(file);
 
     expect(parsed.rootNodes[0]).toMatchObject({
+      valueLength: 50,
       vm: 2,
       valueInterpretation: "Ultrasound Multi-frame Image Storage"
+    });
+  });
+
+  it("keeps undefined sequence lengths as parsed", async () => {
+    const dataSet = {
+      elements: {
+        x00082112: {
+          tag: "x00082112",
+          vr: "SQ",
+          length: 0xffffffff,
+          dataOffset: 200,
+          items: []
+        }
+      },
+      string: vi.fn((tag: string) => {
+        if (tag === "x00020010") {
+          return "1.2.840.10008.1.2.1";
+        }
+        return undefined;
+      })
+    };
+
+    parseDicom.mockReturnValue(dataSet);
+    explicitElementToString.mockReturnValue(undefined);
+
+    const file = {
+      name: "undefined-sequence-length.dcm",
+      arrayBuffer: vi.fn().mockResolvedValue(new Uint8Array([22, 23, 24]).buffer)
+    } as unknown as File;
+    const parsed = await parseDicomFile(file);
+
+    expect(parsed.rootNodes[0]).toMatchObject({
+      tag: "x00082112",
+      vr: "SQ",
+      valueLength: 0xffffffff
     });
   });
 });
