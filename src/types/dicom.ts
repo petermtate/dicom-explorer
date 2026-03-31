@@ -11,6 +11,7 @@ export type DicomAttributeNode = {
   vr?: string;
   vrSource: "parsed" | "dictionary" | "unknown";
   valueInterpretation?: string;
+  valueLength?: number;
   vm: number;
   values: string[];
   valueRanges: ValueRange[];

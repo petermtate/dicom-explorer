@@ -20,6 +20,7 @@ describe("AttributeDetailsPanel", () => {
           vr: "PN",
           vrSource: "parsed",
           valueInterpretation: undefined,
+          valueLength: 8,
           vm: 1,
           values: ["DOE^JOHN"],
           valueRanges: [{ start: 200, end: 207, kind: "value" }],
@@ -31,6 +32,7 @@ describe("AttributeDetailsPanel", () => {
     expect(screen.getByText("Patient Name")).toBeInTheDocument();
     expect(screen.getByText("DOE^JOHN")).toBeInTheDocument();
     expect(screen.getByText("1")).toBeInTheDocument();
+    expect(screen.getByText("8")).toBeInTheDocument();
     expect(screen.getByText("(0010,0010)")).toBeInTheDocument();
   });
 
@@ -44,6 +46,7 @@ describe("AttributeDetailsPanel", () => {
           vr: "OB or OW",
           vrSource: "dictionary",
           valueInterpretation: undefined,
+          valueLength: 512,
           vm: 1,
           values: ["<binary omitted>"],
           valueRanges: [{ start: 512, end: 1023, kind: "value" }],
@@ -65,6 +68,7 @@ describe("AttributeDetailsPanel", () => {
           vr: "UI",
           vrSource: "parsed",
           valueInterpretation: "Ultrasound Multi-frame Image Storage",
+          valueLength: 28,
           vm: 1,
           values: ["1.2.840.10008.5.1.4.1.1.3.1"],
           valueRanges: [{ start: 128, end: 155, kind: "value" }],
@@ -75,5 +79,48 @@ describe("AttributeDetailsPanel", () => {
 
     expect(screen.getByText("Value Interpretation")).toBeInTheDocument();
     expect(screen.getByText("Ultrasound Multi-frame Image Storage")).toBeInTheDocument();
+  });
+
+  it("renders unknown when value length is unavailable", () => {
+    render(
+      <AttributeDetailsPanel
+        node={{
+          id: "x00080020.0",
+          tag: "x00080020",
+          tagLabel: "Study Date",
+          vr: "DA",
+          vrSource: "parsed",
+          valueInterpretation: undefined,
+          vm: 1,
+          values: ["20260101"],
+          valueRanges: [{ start: 300, end: 307, kind: "value" }],
+          children: []
+        }}
+      />
+    );
+
+    expect(screen.getByText("Unknown")).toBeInTheDocument();
+  });
+
+  it("renders undefined for SQ attributes with undefined length", () => {
+    render(
+      <AttributeDetailsPanel
+        node={{
+          id: "x00082112.0",
+          tag: "x00082112",
+          tagLabel: "Source Image Sequence",
+          vr: "SQ",
+          vrSource: "parsed",
+          valueInterpretation: undefined,
+          valueLength: 0xffffffff,
+          vm: 0,
+          values: [],
+          valueRanges: [],
+          children: []
+        }}
+      />
+    );
+
+    expect(screen.getByText("Undefined")).toBeInTheDocument();
   });
 });
