@@ -24,6 +24,17 @@ function toHex(value: number, width = 2): string {
   return value.toString(16).toUpperCase().padStart(width, "0");
 }
 
+function toLatin1Display(value: number): string {
+  const isPrintableAscii = value >= 0x20 && value <= 0x7e;
+  const isPrintableLatin1 = value >= 0xa0 && value <= 0xff;
+
+  if (!isPrintableAscii && !isPrintableLatin1) {
+    return ".";
+  }
+
+  return String.fromCharCode(value);
+}
+
 export default function HexViewer({ bytes, highlights, onByteClick }: Props) {
   const primaryHighlight = highlights[0] ?? null;
   const { viewStart, viewEnd } = useMemo(() => {
@@ -103,6 +114,35 @@ export default function HexViewer({ bytes, highlights, onByteClick }: Props) {
                       aria-label={`Byte ${absolute}`}
                     >
                       {toHex(value)}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="hex-text" aria-label={`Latin-1 text for row ${toHex(rowOffset, 8)}`}>
+                {row.map((value, index) => {
+                  const absolute = rowOffset + index;
+                  const matchingHighlight = highlights.find(
+                    (highlight) => absolute >= highlight.start && absolute <= highlight.end
+                  );
+                  const highlightClass = matchingHighlight
+                    ? matchingHighlight.kind === "tag"
+                      ? "is-highlighted-tag"
+                      : matchingHighlight.kind === "vr"
+                        ? "is-highlighted-vr"
+                        : matchingHighlight.kind === "length"
+                          ? "is-highlighted-length"
+                          : "is-highlighted"
+                    : "";
+
+                  return (
+                    <button
+                      type="button"
+                      className={`hex-char ${highlightClass}`}
+                      key={`char-${absolute}`}
+                      onClick={() => onByteClick?.(absolute)}
+                      aria-label={`Character ${absolute}`}
+                    >
+                      {toLatin1Display(value)}
                     </button>
                   );
                 })}
