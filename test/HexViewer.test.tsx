@@ -30,10 +30,22 @@ describe("HexViewer", () => {
     const highlightedTag = container.querySelectorAll(".hex-grid .hex-byte.is-highlighted-tag");
     const highlightedVr = container.querySelectorAll(".hex-grid .hex-byte.is-highlighted-vr");
     const highlightedLength = container.querySelectorAll(".hex-grid .hex-byte.is-highlighted-length");
+    const highlightedChars = container.querySelectorAll(".hex-grid .hex-char.is-highlighted-tag");
     expect(highlightedTag).toHaveLength(3);
     expect(highlightedVr).toHaveLength(2);
     expect(highlightedLength).toHaveLength(2);
+    expect(highlightedChars).toHaveLength(3);
     expect(screen.getByText("02")).toBeInTheDocument();
+  });
+
+  it("shows a latin-1 character strip for each row with dots for non-printable bytes", () => {
+    const bytes = new Uint8Array([0x41, 0x00, 0x7e, 0x80, 0xa3]);
+
+    const { container } = render(<HexViewer bytes={bytes} highlights={[]} />);
+    const rowText = container.querySelector(".hex-text");
+
+    expect(rowText).toBeInTheDocument();
+    expect(rowText?.textContent).toBe("A.~.£");
   });
 
   it("shows a legend with a dedicated VR swatch", () => {

@@ -246,7 +246,7 @@ ul {
 
 .hex-row {
   display: grid;
-  grid-template-columns: 6rem 1fr;
+  grid-template-columns: 6rem 1fr auto;
   gap: 0.75rem;
 }
 
@@ -260,6 +260,11 @@ ul {
   gap: 0.35rem;
 }
 
+.hex-text {
+  display: flex;
+  gap: 0;
+}
+
 .hex-byte {
   border: none;
   background: transparent;
@@ -270,7 +275,24 @@ ul {
   cursor: pointer;
 }
 
+.hex-char {
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  padding: 0.05rem 0;
+  border-radius: 3px;
+  cursor: pointer;
+  width: 0.65rem;
+  text-align: center;
+}
+
 .hex-byte.is-highlighted {
+  background: #f2a341;
+  color: #1f1911;
+}
+
+.hex-char.is-highlighted {
   background: #f2a341;
   color: #1f1911;
 }
@@ -280,12 +302,27 @@ ul {
   color: #0f2732;
 }
 
+.hex-char.is-highlighted-tag {
+  background: #8cd9ff;
+  color: #0f2732;
+}
+
 .hex-byte.is-highlighted-vr {
   background: #86efac;
   color: #102616;
 }
 
+.hex-char.is-highlighted-vr {
+  background: #86efac;
+  color: #102616;
+}
+
 .hex-byte.is-highlighted-length {
+  background: #d8b4fe;
+  color: #2f1946;
+}
+
+.hex-char.is-highlighted-length {
   background: #d8b4fe;
   color: #2f1946;
 }
