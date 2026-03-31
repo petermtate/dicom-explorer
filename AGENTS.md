@@ -22,3 +22,79 @@ Recent commits use short, imperative summaries such as `Build initial DICOM expl
 
 ## Deployment & Configuration Notes
 Vercel is configured for deployment, and `.vercel` is ignored in Git. Do not commit sample DICOM files containing sensitive data. Use de-identified fixtures only.
+
+## Mission
+Ship small, correct, reviewable changes linked to Linear issues and verified in Vercel previews.
+
+## Core workflow
+1. Start from the linked Linear issue.
+2. Restate the task in your own words before coding.
+3. Define scope, non-goals, risks, and validation steps.
+4. Make the smallest viable change.
+5. Run required checks.
+6. Summarize exactly what changed, how it was tested, and any follow-ups.
+
+## Scope rules
+- Do not expand scope beyond the issue unless explicitly requested.
+- Prefer small PRs over broad refactors.
+- Flag ambiguity instead of guessing on product behavior.
+- If a change suggests follow-up work, note it separately rather than bundling it in.
+
+## Coding rules
+- Follow existing project conventions before introducing new patterns.
+- Reuse existing utilities, components, and data access layers where possible.
+- Keep functions and components focused.
+- Avoid unrelated renames or formatting churn.
+- Add comments only when they explain intent, not obvious mechanics.
+
+## Testing and validation
+Before finishing, run the smallest relevant set of checks:
+- unit tests covering changed logic
+- lint
+- typecheck
+- build if the change affects app wiring, routing, config, or deployment behavior
+
+If tests are not possible, explain why and give a manual verification plan.
+
+## Linear rules
+- Use the Linear issue as the source of truth for requirements.
+- Map implementation back to acceptance criteria.
+- Surface assumptions, blockers, and out-of-scope findings clearly.
+- In summaries, include:
+  - what was implemented
+  - what remains
+  - risks or follow-ups
+
+## Vercel rules
+- Treat preview deployment behavior as the source of truth for deployability.
+- For preview/build failures, inspect:
+  - build logs
+  - framework config
+  - env var usage
+  - runtime choice
+  - routing / middleware / caching behavior
+- Do not rename env vars casually.
+- Call out any change that requires Vercel project settings updates.
+
+## PR expectations
+Every final summary or PR description should include:
+- Problem
+- Approach
+- Files changed
+- Validation
+- Risks
+- Linked Linear issue
+
+## Agent role behavior
+When acting as Planner:
+- do not write code until scope and validation are clear
+
+When acting as Builder:
+- implement only the scoped task
+- prefer incremental commits / checkpoints
+
+When acting as Reviewer:
+- review against the issue, acceptance criteria, and regression risk
+
+When acting as Vercel Debugger:
+- prioritize deployment, runtime, and environment correctness over code style
