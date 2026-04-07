@@ -71,11 +71,35 @@ function tagImpliesTransferSyntax(tagLabel: string): boolean {
   return /Transfer Syntax UID/i.test(tagLabel);
 }
 
+const REGION_SPATIAL_FORMAT_INTERPRETATIONS: Record<string, string> = {
+  "0": "None or not applicable",
+  "1": "2D (tissue or flow)",
+  "2": "M-Mode (tissue or flow)",
+  "3": "Spectral (CW or PW Doppler)",
+  "4": "Wave form (physiological traces, Doppler traces,…)",
+  "5": "Graphics"
+};
+
+function getRegionSpatialFormatInterpretation(tag: string, rawValues: string[]): string | undefined {
+  if (tag.toLowerCase() !== "x00186012" || rawValues.length === 0) {
+    return undefined;
+  }
+
+  const firstValue = rawValues[0].trim();
+  return REGION_SPATIAL_FORMAT_INTERPRETATIONS[firstValue];
+}
+
 function getValueInterpretation(
+  tag: string,
   tagLabel: string,
   vr: string | undefined,
   rawValues: string[]
 ): string | undefined {
+  const regionSpatialFormatInterpretation = getRegionSpatialFormatInterpretation(tag, rawValues);
+  if (regionSpatialFormatInterpretation) {
+    return regionSpatialFormatInterpretation;
+  }
+
   if (vr !== "UI" || rawValues.length === 0) {
     return undefined;
   }
@@ -185,7 +209,7 @@ function buildNodeTree(
       const vr = vrSource === "dictionary" ? tagInfo.vr : parsedVr;
       const rawValues = getRawElementValues(dataSet, element);
       const { vm, values } = formatElementValues(dataSet, element, vr);
-      const valueInterpretation = getValueInterpretation(tagInfo.tagLabel, vr, rawValues);
+      const valueInterpretation = getValueInterpretation(tag, tagInfo.tagLabel, vr, rawValues);
 
       let children: DicomAttributeNode[] = [];
       if (Array.isArray(element.items) && element.items.length > 0) {

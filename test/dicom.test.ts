@@ -270,6 +270,79 @@ describe("parseDicomFile", () => {
     });
   });
 
+  it.each([
+    { code: "0", interpretation: "None or not applicable" },
+    { code: "1", interpretation: "2D (tissue or flow)" },
+    { code: "2", interpretation: "M-Mode (tissue or flow)" },
+    { code: "3", interpretation: "Spectral (CW or PW Doppler)" },
+    { code: "4", interpretation: "Wave form (physiological traces, Doppler traces,…)" },
+    { code: "5", interpretation: "Graphics" }
+  ])("interprets region spatial format code $code", async ({ code, interpretation }) => {
+    const dataSet = {
+      elements: {
+        x00186012: {
+          tag: "x00186012",
+          vr: "US",
+          length: 2,
+          dataOffset: 128
+        }
+      },
+      string: vi.fn((tag: string) => {
+        if (tag === "x00020010") {
+          return "1.2.840.10008.1.2.1";
+        }
+        return undefined;
+      })
+    };
+
+    parseDicom.mockReturnValue(dataSet);
+    explicitElementToString.mockReturnValue(code);
+
+    const file = {
+      name: `region-spatial-format-${code}.dcm`,
+      arrayBuffer: vi.fn().mockResolvedValue(new Uint8Array([31, 32, 33]).buffer)
+    } as unknown as File;
+    const parsed = await parseDicomFile(file);
+
+    expect(parsed.rootNodes[0]).toMatchObject({
+      tag: "x00186012",
+      valueInterpretation: interpretation
+    });
+  });
+
+  it("does not interpret unknown region spatial format codes", async () => {
+    const dataSet = {
+      elements: {
+        x00186012: {
+          tag: "x00186012",
+          vr: "US",
+          length: 2,
+          dataOffset: 128
+        }
+      },
+      string: vi.fn((tag: string) => {
+        if (tag === "x00020010") {
+          return "1.2.840.10008.1.2.1";
+        }
+        return undefined;
+      })
+    };
+
+    parseDicom.mockReturnValue(dataSet);
+    explicitElementToString.mockReturnValue("42");
+
+    const file = {
+      name: "region-spatial-format-unknown.dcm",
+      arrayBuffer: vi.fn().mockResolvedValue(new Uint8Array([34, 35, 36]).buffer)
+    } as unknown as File;
+    const parsed = await parseDicomFile(file);
+
+    expect(parsed.rootNodes[0]).toMatchObject({
+      tag: "x00186012"
+    });
+    expect(parsed.rootNodes[0].valueInterpretation).toBeUndefined();
+  });
+
   it("keeps undefined sequence lengths as parsed", async () => {
     const dataSet = {
       elements: {
