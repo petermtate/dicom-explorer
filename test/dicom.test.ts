@@ -4,10 +4,16 @@ const { explicitElementToString, parseDicom } = vi.hoisted(() => ({
   explicitElementToString: vi.fn(),
   parseDicom: vi.fn()
 }));
+const { convertBytes } = vi.hoisted(() => ({
+  convertBytes: vi.fn()
+}));
 
 vi.mock("dicom-parser", () => ({
   explicitElementToString,
   parseDicom
+}));
+vi.mock("dicom-character-set", () => ({
+  convertBytes
 }));
 
 import { parseDicomFile } from "@/lib/dicom";
@@ -16,6 +22,7 @@ describe("parseDicomFile", () => {
   beforeEach(() => {
     explicitElementToString.mockReset();
     parseDicom.mockReset();
+    convertBytes.mockReset();
   });
 
   it("marks VRs from implicit transfer syntax as dictionary-derived", async () => {
@@ -44,6 +51,7 @@ describe("parseDicomFile", () => {
       return dataSet;
     });
     explicitElementToString.mockReturnValue("DOE^JOHN");
+    convertBytes.mockReturnValue(undefined);
 
     const file = {
       name: "implicit.dcm",
@@ -82,6 +90,7 @@ describe("parseDicomFile", () => {
 
     parseDicom.mockReturnValue(dataSet);
     explicitElementToString.mockReturnValue("1.2.840.10008.5.1.4.1.1.2");
+    convertBytes.mockReturnValue(undefined);
 
     const file = {
       name: "explicit.dcm",
@@ -125,6 +134,7 @@ describe("parseDicomFile", () => {
 
     parseDicom.mockReturnValue(dataSet);
     explicitElementToString.mockReturnValue("9.9.9");
+    convertBytes.mockReturnValue(undefined);
 
     const file = {
       name: "unknown-sop.dcm",
@@ -159,6 +169,7 @@ describe("parseDicomFile", () => {
 
     parseDicom.mockReturnValue(dataSet);
     explicitElementToString.mockReturnValue("1.2.840.10008.1.2.1");
+    convertBytes.mockReturnValue(undefined);
 
     const file = {
       name: "transfer-syntax.dcm",
@@ -193,6 +204,7 @@ describe("parseDicomFile", () => {
 
     parseDicom.mockReturnValue(dataSet);
     explicitElementToString.mockReturnValue("9.9.9");
+    convertBytes.mockReturnValue(undefined);
 
     const file = {
       name: "unknown-transfer-syntax.dcm",
@@ -226,6 +238,7 @@ describe("parseDicomFile", () => {
 
     parseDicom.mockReturnValue(dataSet);
     explicitElementToString.mockReturnValue("9.9.9");
+    convertBytes.mockReturnValue(undefined);
 
     const file = {
       name: "unrelated-ui.dcm",
@@ -256,6 +269,7 @@ describe("parseDicomFile", () => {
 
     parseDicom.mockReturnValue(dataSet);
     explicitElementToString.mockReturnValue("1.2.840.10008.5.1.4.1.1.3.1\\9.9.9");
+    convertBytes.mockReturnValue(undefined);
 
     const file = {
       name: "multi-ui.dcm",
@@ -297,6 +311,7 @@ describe("parseDicomFile", () => {
 
     parseDicom.mockReturnValue(dataSet);
     explicitElementToString.mockReturnValue(code);
+    convertBytes.mockReturnValue(undefined);
 
     const file = {
       name: `region-spatial-format-${code}.dcm`,
@@ -330,6 +345,7 @@ describe("parseDicomFile", () => {
 
     parseDicom.mockReturnValue(dataSet);
     explicitElementToString.mockReturnValue("42");
+    convertBytes.mockReturnValue(undefined);
 
     const file = {
       name: "region-spatial-format-unknown.dcm",
@@ -364,6 +380,7 @@ describe("parseDicomFile", () => {
 
     parseDicom.mockReturnValue(dataSet);
     explicitElementToString.mockReturnValue(undefined);
+    convertBytes.mockReturnValue(undefined);
 
     const file = {
       name: "undefined-sequence-length.dcm",
@@ -375,6 +392,96 @@ describe("parseDicomFile", () => {
       tag: "x00082112",
       vr: "SQ",
       valueLength: 0xffffffff
+    });
+  });
+
+  it("decodes text values using Specific Character Set for supported VRs", async () => {
+    const dataSet = {
+      elements: {
+        x00080005: {
+          tag: "x00080005",
+          vr: "CS",
+          length: 10,
+          dataOffset: 8
+        },
+        x00100010: {
+          tag: "x00100010",
+          vr: "PN",
+          length: 8,
+          dataOffset: 16
+        }
+      },
+      string: vi.fn((tag: string) => {
+        if (tag === "x00020010") {
+          return "1.2.840.10008.1.2.1";
+        }
+        if (tag === "x00080005") {
+          return "ISO_IR 100";
+        }
+        return undefined;
+      })
+    };
+
+    parseDicom.mockReturnValue(dataSet);
+    explicitElementToString.mockReturnValue("fallback");
+    convertBytes.mockImplementation((specificCharacterSet: string | undefined, _valueBytes: Uint8Array, options?: { vr?: string }) => {
+      if (options?.vr === "PN") {
+        expect(specificCharacterSet).toBe("ISO_IR 100");
+        return "Müller^Jörg";
+      }
+      return undefined;
+    });
+
+    const file = {
+      name: "international-name.dcm",
+      arrayBuffer: vi
+        .fn()
+        .mockResolvedValue(new Uint8Array([0, 1, 2, 3, 4, 5, 6, 7, 73, 83, 79, 95, 73, 82, 32, 49, 65, 66, 67, 68, 69, 70, 71, 72]).buffer)
+    } as unknown as File;
+    const parsed = await parseDicomFile(file);
+
+    expect(parsed.rootNodes.find((node) => node.tag === "x00100010")).toMatchObject({
+      values: ["Müller^Jörg"]
+    });
+    expect(explicitElementToString).toHaveBeenCalled();
+  });
+
+  it("falls back gracefully when charset decoding fails", async () => {
+    const dataSet = {
+      elements: {
+        x00100020: {
+          tag: "x00100020",
+          vr: "LO",
+          length: 6,
+          dataOffset: 12
+        }
+      },
+      string: vi.fn((tag: string) => {
+        if (tag === "x00020010") {
+          return "1.2.840.10008.1.2.1";
+        }
+        if (tag === "x00080005") {
+          return "ISO 2022 IR 149";
+        }
+        return undefined;
+      })
+    };
+
+    parseDicom.mockReturnValue(dataSet);
+    explicitElementToString.mockReturnValue("FALLBACK");
+    convertBytes.mockImplementation(() => {
+      throw new Error("unsupported charset");
+    });
+
+    const file = {
+      name: "unsupported-charset.dcm",
+      arrayBuffer: vi.fn().mockResolvedValue(new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 65, 66, 67, 68, 69, 70]).buffer)
+    } as unknown as File;
+    const parsed = await parseDicomFile(file);
+
+    expect(parsed.rootNodes[0]).toMatchObject({
+      tag: "x00100020",
+      values: ["FALLBACK"]
     });
   });
 });

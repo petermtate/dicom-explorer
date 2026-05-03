@@ -1,0 +1,6 @@
+{
+  "name": "dicom-character-set",
+  "version": "1.0.5",
+  "main": "index.js",
+  "types": "index.d.ts"
+}

@@ -4,6 +4,7 @@ import { getSopClassName } from "@/lib/sopClassDictionary";
 import { getTransferSyntaxName } from "@/lib/transferSyntaxDictionary";
 import type { DicomAttributeNode, ParsedDicomDocument, ValueRange } from "@/types/dicom";
 import { getTagInfo } from "@/lib/tagDictionary";
+import { decodeDicomTextValue } from "@/lib/decodeDicomText";
 
 const BINARY_VRS = new Set(["OB", "OD", "OF", "OL", "OV", "OW", "UN"]);
 const TEXT_PREVIEW_LIMIT = 256;
@@ -25,16 +26,53 @@ function isFileMetaTag(tag: string): boolean {
   return tag.toLowerCase().startsWith("x0002");
 }
 
-function getRawElementValue(dataSet: DataSet, element: Element): string | undefined {
+function getElementValueBytes(byteArray: Uint8Array, element: Element): Uint8Array {
+  if (typeof element.dataOffset !== "number" || typeof element.length !== "number" || element.length <= 0) {
+    return new Uint8Array(0);
+  }
+
+  const start = Math.max(element.dataOffset, 0);
+  const end = Math.min(start + element.length, byteArray.length);
+  if (start >= end) {
+    return new Uint8Array(0);
+  }
+
+  return byteArray.subarray(start, end);
+}
+
+function getRawElementValue(
+  dataSet: DataSet,
+  byteArray: Uint8Array,
+  element: Element,
+  vr: string | undefined,
+  specificCharacterSet: string | undefined
+): string | undefined {
+  const decoded = decodeDicomTextValue(specificCharacterSet, getElementValueBytes(byteArray, element), vr);
+  if (decoded !== undefined) {
+    return decoded;
+  }
+
   return explicitElementToString(dataSet, element) ?? dataSet.string(element.tag) ?? undefined;
 }
 
-function getRawElementValues(dataSet: DataSet, element: Element): string[] {
-  const raw = getRawElementValue(dataSet, element);
+function getRawElementValues(
+  dataSet: DataSet,
+  byteArray: Uint8Array,
+  element: Element,
+  vr: string | undefined,
+  specificCharacterSet: string | undefined
+): string[] {
+  const raw = getRawElementValue(dataSet, byteArray, element, vr, specificCharacterSet);
   return raw ? raw.split("\\") : [];
 }
 
-function formatElementValues(dataSet: DataSet, element: Element, vr?: string): { vm: number; values: string[] } {
+function formatElementValues(
+  dataSet: DataSet,
+  byteArray: Uint8Array,
+  element: Element,
+  vr: string | undefined,
+  specificCharacterSet: string | undefined
+): { vm: number; values: string[] } {
   const effectiveVr = vr ?? element.vr ?? "";
 
   if (element.length === 0) {
@@ -45,7 +83,7 @@ function formatElementValues(dataSet: DataSet, element: Element, vr?: string): {
     return { vm: 1, values: ["<binary omitted>"] };
   }
 
-  const rawParts = getRawElementValues(dataSet, element);
+  const rawParts = getRawElementValues(dataSet, byteArray, element, vr, specificCharacterSet);
   if (rawParts.length === 0) {
     return { vm: 1, values: ["<unavailable>"] };
   }
@@ -190,9 +228,11 @@ function getValueRanges(element: Element, vr: string | undefined, isImplicitTran
 
 function buildNodeTree(
   dataSet: DataSet,
+  byteArray: Uint8Array,
   indexById: Map<string, DicomAttributeNode>,
   parentId: string,
-  isImplicitTransferSyntax: boolean
+  isImplicitTransferSyntax: boolean,
+  specificCharacterSet: string | undefined
 ): DicomAttributeNode[] {
   return Object.entries(dataSet.elements)
     .sort(([left], [right]) => left.localeCompare(right))
@@ -207,8 +247,8 @@ function buildNodeTree(
             ? "dictionary"
             : "unknown";
       const vr = vrSource === "dictionary" ? tagInfo.vr : parsedVr;
-      const rawValues = getRawElementValues(dataSet, element);
-      const { vm, values } = formatElementValues(dataSet, element, vr);
+      const rawValues = getRawElementValues(dataSet, byteArray, element, vr, specificCharacterSet);
+      const { vm, values } = formatElementValues(dataSet, byteArray, element, vr, specificCharacterSet);
       const valueInterpretation = getValueInterpretation(tag, tagInfo.tagLabel, vr, rawValues);
 
       let children: DicomAttributeNode[] = [];
@@ -218,7 +258,7 @@ function buildNodeTree(
             return [];
           }
 
-          return buildNodeTree(item.dataSet, indexById, `${id}.item${itemIndex}`, isImplicitTransferSyntax);
+          return buildNodeTree(item.dataSet, byteArray, indexById, `${id}.item${itemIndex}`, isImplicitTransferSyntax, specificCharacterSet);
         });
       }
 
@@ -248,9 +288,10 @@ export async function parseDicomFile(file: File): Promise<ParsedDicomDocument> {
     vrCallback: (tag) => getTagInfo(tag).parserVr
   });
   const transferSyntaxUid = dataSet.string("x00020010");
+  const specificCharacterSet = dataSet.string("x00080005");
   const isImplicitTransferSyntax = transferSyntaxUid === IMPLICIT_VR_LITTLE_ENDIAN_UID;
   const indexById = new Map<string, DicomAttributeNode>();
-  const rootNodes = buildNodeTree(dataSet, indexById, "", isImplicitTransferSyntax);
+  const rootNodes = buildNodeTree(dataSet, byteArray, indexById, "", isImplicitTransferSyntax, specificCharacterSet);
 
   return {
     fileName: file.name,
