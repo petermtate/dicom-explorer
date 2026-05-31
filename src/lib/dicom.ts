@@ -127,6 +127,57 @@ function getRegionSpatialFormatInterpretation(tag: string, rawValues: string[]):
   return REGION_SPATIAL_FORMAT_INTERPRETATIONS[firstValue];
 }
 
+const REGION_DATA_TYPE_INTERPRETATIONS: Record<string, string> = {
+  "1": "Tissue",
+  "2": "Color flow",
+  "3": "PW Doppler",
+  "4": "CW Doppler",
+  "5": "Doppler mean trace",
+  "6": "Doppler mode trace",
+  "7": "Doppler max trace",
+  "8": "Volume trace",
+  "9": "ECG trace",
+  "10": "Pressure trace",
+  "11": "Doppler min trace",
+  "12": "Doppler variance trace",
+  "13": "Doppler power trace",
+  "14": "Gray bar",
+  "15": "Color bar",
+  "16": "Integrated backscatter",
+  "17": "Projection image",
+  "18": "Computed tomography",
+  "19": "Magnetic resonance",
+  "20": "Time activity curve",
+  "21": "Probability map",
+  "22": "Sigma map",
+  "23": "Variance map",
+  "24": "Standard deviation map",
+  "25": "Dimensionless map",
+  "26": "Discrete map",
+  "27": "Image quality",
+  "28": "Motion map",
+  "29": "Pressure map",
+  "30": "Flow map",
+  "31": "Velocity map",
+  "32": "Acceleration map",
+  "33": "Power map",
+  "34": "Maximum velocity map",
+  "35": "Variance velocity map",
+  "36": "Variance power map",
+  "37": "Maximum power map",
+  "38": "RMS velocity map",
+  "39": "RMS power map"
+};
+
+function getRegionDataTypeInterpretation(tag: string, rawValues: string[]): string | undefined {
+  if (tag.toLowerCase() !== "x00186014" || rawValues.length === 0) {
+    return undefined;
+  }
+
+  const firstValue = rawValues[0].trim();
+  return REGION_DATA_TYPE_INTERPRETATIONS[firstValue];
+}
+
 function getValueInterpretation(
   tag: string,
   tagLabel: string,
@@ -136,6 +187,11 @@ function getValueInterpretation(
   const regionSpatialFormatInterpretation = getRegionSpatialFormatInterpretation(tag, rawValues);
   if (regionSpatialFormatInterpretation) {
     return regionSpatialFormatInterpretation;
+  }
+
+  const regionDataTypeInterpretation = getRegionDataTypeInterpretation(tag, rawValues);
+  if (regionDataTypeInterpretation) {
+    return regionDataTypeInterpretation;
   }
 
   if (vr !== "UI" || rawValues.length === 0) {

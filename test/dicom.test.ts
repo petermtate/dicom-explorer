@@ -325,6 +325,79 @@ describe("parseDicomFile", () => {
     });
   });
 
+  it.each([
+    { code: "1", interpretation: "Tissue" },
+    { code: "2", interpretation: "Color flow" },
+    { code: "3", interpretation: "PW Doppler" },
+    { code: "4", interpretation: "CW Doppler" },
+    { code: "5", interpretation: "Doppler mean trace" },
+    { code: "39", interpretation: "RMS power map" }
+  ])("interprets region data type code $code", async ({ code, interpretation }) => {
+    const dataSet = {
+      elements: {
+        x00186014: {
+          tag: "x00186014",
+          vr: "US",
+          length: 2,
+          dataOffset: 128
+        }
+      },
+      string: vi.fn((tag: string) => {
+        if (tag === "x00020010") {
+          return "1.2.840.10008.1.2.1";
+        }
+        return undefined;
+      })
+    };
+
+    parseDicom.mockReturnValue(dataSet);
+    explicitElementToString.mockReturnValue(code);
+
+    const file = {
+      name: `region-data-type-${code}.dcm`,
+      arrayBuffer: vi.fn().mockResolvedValue(new Uint8Array([41, 42, 43]).buffer)
+    } as unknown as File;
+    const parsed = await parseDicomFile(file);
+
+    expect(parsed.rootNodes[0]).toMatchObject({
+      tag: "x00186014",
+      valueInterpretation: interpretation
+    });
+  });
+
+  it("does not interpret unknown region data type codes", async () => {
+    const dataSet = {
+      elements: {
+        x00186014: {
+          tag: "x00186014",
+          vr: "US",
+          length: 2,
+          dataOffset: 128
+        }
+      },
+      string: vi.fn((tag: string) => {
+        if (tag === "x00020010") {
+          return "1.2.840.10008.1.2.1";
+        }
+        return undefined;
+      })
+    };
+
+    parseDicom.mockReturnValue(dataSet);
+    explicitElementToString.mockReturnValue("99");
+
+    const file = {
+      name: "region-data-type-unknown.dcm",
+      arrayBuffer: vi.fn().mockResolvedValue(new Uint8Array([44, 45, 46]).buffer)
+    } as unknown as File;
+    const parsed = await parseDicomFile(file);
+
+    expect(parsed.rootNodes[0]).toMatchObject({
+      tag: "x00186014"
+    });
+    expect(parsed.rootNodes[0].valueInterpretation).toBeUndefined();
+  });
+
   it("does not interpret unknown region spatial format codes", async () => {
     const dataSet = {
       elements: {
