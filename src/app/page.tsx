@@ -34,7 +34,7 @@ export default function HomePage() {
     try {
       const parsed = await parseDicomFile(file);
       setDocument(parsed);
-      setSelectedNodeId(parsed.rootNodes[0]?.id ?? null);
+      setSelectedNodeId(null);
       setLoadState("loaded");
     } catch {
       setDocument(null);
@@ -69,7 +69,11 @@ export default function HomePage() {
 
       <section className="workspace">
         <aside className="panel tree-panel">
-          <h2>Attributes</h2>
+          <h2>
+            <button className="panel-title-button" type="button" onClick={() => setSelectedNodeId(null)}>
+              Attributes
+            </button>
+          </h2>
           <div className="panel-body">
             <AttributeTree
               nodes={document?.rootNodes ?? []}
@@ -82,7 +86,7 @@ export default function HomePage() {
         <div className="right-column">
           <section className="panel details-panel">
             <h2>Attribute Details</h2>
-            <AttributeDetailsPanel node={selectedNode} />
+            <AttributeDetailsPanel document={document} node={selectedNode} />
           </section>
 
           <section className="panel hex-panel">

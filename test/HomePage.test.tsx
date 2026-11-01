@@ -22,7 +22,9 @@ vi.mock("@/components/FileDropZone", () => ({
 }));
 
 vi.mock("@/components/AttributeTree", () => ({
-  default: () => <div>Attribute tree</div>
+  default: ({ onSelectNode }: { onSelectNode: (nodeId: string) => void }) => (
+    <button type="button" onClick={() => onSelectNode("node-1")}>Select attribute</button>
+  )
 }));
 
 vi.mock("@/components/AttributeDetailsPanel", () => ({
@@ -48,7 +50,7 @@ describe("HomePage", () => {
     cleanup();
   });
 
-  it("passes tag, length, and value ranges to the hex viewer for the selected node", async () => {
+  it("starts with no selection and clears a selected attribute from the Attributes title", async () => {
     const document: ParsedDicomDocument = {
       fileName: "sample.dcm",
       byteArray: new Uint8Array([0, 1, 2, 3]),
@@ -81,8 +83,10 @@ describe("HomePage", () => {
 
     await waitFor(() => {
       expect(parseDicomFile).toHaveBeenCalled();
-      expect(screen.getByText("Hex highlights: tag,vr,length,value")).toBeInTheDocument();
+      expect(screen.getByText("Hex highlights:")).toBeInTheDocument();
     });
+
+    fireEvent.click(screen.getByRole("button", { name: "Select attribute" }));
 
     expect(hexViewerSpy).toHaveBeenLastCalledWith([
       { start: 0, end: 3, kind: "tag" },
@@ -90,5 +94,8 @@ describe("HomePage", () => {
       { start: 6, end: 7, kind: "length" },
       { start: 8, end: 15, kind: "value" }
     ]);
+
+    fireEvent.click(screen.getByRole("button", { name: "Attributes" }));
+    expect(hexViewerSpy).toHaveBeenLastCalledWith([]);
   });
 });
