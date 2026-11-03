@@ -121,6 +121,20 @@ ul {
   font-size: 1rem;
 }
 
+.panel-title-button {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+
+.panel-title-button:hover,
+.panel-title-button:focus-visible {
+  color: var(--accent);
+}
+
 .tree-panel {
   display: flex;
   flex-direction: column;
