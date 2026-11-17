@@ -10,6 +10,9 @@ This is a Next.js 14 app for inspecting DICOM attributes and raw bytes. Main rou
 - `npm run start`: serve the production build locally after a successful build.
 - `npm test`: run the full Vitest suite.
 - `npm test -- test/AttributeDetailsPanel.test.tsx`: run a focused test file during development.
+- `npm run test:e2e`: run the Playwright browser tests.
+- `npx tsc --noEmit`: check TypeScript types.
+- No lint script or lint tooling is currently configured. Establish tooling before requiring a lint check.
 
 ## Coding Style & Naming Conventions
 Use TypeScript, React function components, and the existing import alias style such as `@/components/...`. Follow the current formatting already in the repo: 2-space indentation, semicolons, and double quotes. Name React components in PascalCase, utility modules in camelCase, and test files as `*.test.ts` or `*.test.tsx`. Prefer small helpers in `src/lib/` for shared formatting or parsing logic instead of duplicating string manipulation in components.
@@ -24,10 +27,10 @@ Recent commits use short, imperative summaries such as `Build initial DICOM expl
 Vercel is configured for deployment, and `.vercel` is ignored in Git. Do not commit sample DICOM files containing sensitive data. Use de-identified fixtures only.
 
 ## Mission
-Ship small, correct, reviewable changes linked to Linear issues and verified in Vercel previews.
+Ship small, correct, reviewable changes linked to Linear issues when provided, with Vercel preview verification when deployed.
 
 ## Core workflow
-1. Start from the linked Linear issue.
+1. Start from the linked Linear issue when provided; otherwise use the explicit user request as the source of requirements.
 2. Restate the task in your own words before coding.
 3. Define scope, non-goals, risks, and validation steps.
 4. Make the smallest viable change.
@@ -35,7 +38,7 @@ Ship small, correct, reviewable changes linked to Linear issues and verified in 
 6. Summarize exactly what changed, how it was tested, and any follow-ups.
 
 ## Scope rules
-- Do not expand scope beyond the issue unless explicitly requested.
+- Do not expand scope beyond the issue or explicit user request unless explicitly requested.
 - Prefer small PRs over broad refactors.
 - Flag ambiguity instead of guessing on product behavior.
 - If a change suggests follow-up work, note it separately rather than bundling it in.
@@ -49,16 +52,19 @@ Ship small, correct, reviewable changes linked to Linear issues and verified in 
 
 ## Testing and validation
 Before finishing, run the smallest relevant set of checks:
-- unit tests covering changed logic
-- lint
-- typecheck
-- build if the change affects app wiring, routing, config, or deployment behavior
+- `npm test -- <test-file>` for changed logic, or `npm test` when broader coverage is needed
+- relevant Playwright browser checks with `npm run test:e2e -- <test-file>` for visible behavior
+- `npx tsc --noEmit` for TypeScript changes
+- lint once lint tooling and a script are configured
+- `npm run build` if the change affects app wiring, routing, config, or deployment behavior
+
+For documentation-only changes, inspect the diff and run `git diff --check`; app checks are not required.
 
 If tests are not possible, explain why and give a manual verification plan.
 
 ## Linear rules
-- Use the Linear issue as the source of truth for requirements.
-- Map implementation back to acceptance criteria.
+- Use the linked Linear issue as the source of truth when provided; otherwise use the explicit user request. Setup and maintenance tasks do not require an issue.
+- Map implementation back to the issue's acceptance criteria or the user's requested outcome.
 - Surface assumptions, blockers, and out-of-scope findings clearly.
 - In summaries, include:
   - what was implemented
@@ -67,6 +73,7 @@ If tests are not possible, explain why and give a manual verification plan.
 
 ## Vercel rules
 - Treat preview deployment behavior as the source of truth for deployability.
+- When deployed, include the preview URL and verification results. Explicitly report when preview validation remains outstanding; local checks alone do not establish preview behavior.
 - For preview/build failures, inspect:
   - build logs
   - framework config
@@ -77,13 +84,15 @@ If tests are not possible, explain why and give a manual verification plan.
 - Call out any change that requires Vercel project settings updates.
 
 ## PR expectations
-Every final summary or PR description should include:
+Implementation final summaries and PR descriptions should include:
 - Problem
 - Approach
 - Files changed
 - Validation
 - Risks
-- Linked Linear issue
+- Linked Linear issue, when provided
+
+Keep help, review, and setup responses proportional to the task; they do not require this six-field summary.
 
 ## Agent role behavior
 When acting as Planner:
@@ -94,7 +103,63 @@ When acting as Builder:
 - prefer incremental commits / checkpoints
 
 When acting as Reviewer:
-- review against the issue, acceptance criteria, and regression risk
+- review against the issue or explicit user request, acceptance criteria, and regression risk
 
 When acting as Vercel Debugger:
 - prioritize deployment, runtime, and environment correctness over code style
+
+
+## Pstack skill orchestration
+
+Use installed Pstack skills when they are available
+and appropriate to the issue or explicit user request.
+
+- Planner: investigate requirements, scope and risks.
+- Builder: implement the approved scope.
+- Reviewer: independently assess correctness,
+  acceptance criteria and regression risks.
+- Vercel Debugger: investigate deployment failures.
+
+Use the Pstack poteto-mode workflow for changes touching
+more than one file, changes to signatures called by other
+files, design or architecture decisions, bugs whose cause
+is not yet known, and performance work.
+
+For small fixes, prefer a focused implementation
+rather than unnecessary multi-agent orchestration.
+
+Never assume a skill ran successfully. If a
+requested skill is unavailable, report that fact
+and follow the existing repository workflow.
+
+Existing repository instructions and Linear
+acceptance criteria take precedence over
+generic skill recommendations.
+
+<!-- pstack-models:start -->
+## Pstack model overrides
+
+These repository-specific role settings override pstack skill defaults and any global model overrides. Use them in local and cloud agents when the configured models are available; report unavailable models before substituting another model.
+
+feature, refactoring: gpt-6.1-sol
+bug-fix: gpt-6.1-sol
+perf-issue: gpt-6.1-sol
+hillclimb: gpt-6.1-sol
+judgment and prose: gpt-6.1-sol
+strongest judgment: gpt-6-astra
+how explorer: gpt-6.1-sol
+how explainer: gpt-6.1-sol
+why investigators: gpt-6.1-sol
+why synthesizer: gpt-6.1-sol
+reflect tooling: gpt-6.1-sol
+reflect judgment, divergent, synthesizer: gpt-6.1-sol
+arena runners: gpt-6.1-sol, gpt-6.1-terra, gpt-6-astra
+arena cross-judge pool: gpt-6-astra, gpt-6.1-terra, gpt-6.1-sol
+swarm workers: gpt-6.1-sol
+architect runners: gpt-6.1-sol, gpt-6.1-terra, gpt-6-astra
+interrogate reviewers: gpt-6.1-sol, gpt-6.1-terra, gpt-6-astra
+thermos reviewers: gpt-6.1-sol
+no-comments reviewer: gpt-6.1-sol
+
+default effort: medium
+<!-- pstack-models:end -->
